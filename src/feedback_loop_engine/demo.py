@@ -25,7 +25,6 @@ def seed(store: Store) -> int:
     for step in range(8):
         for user_index in range(6):
             user_id = f"user-{user_index}"
-            category = CATEGORIES[user_index]
             chosen = videos[(user_index * 6 + step) % len(videos)]
             # Steps 6 and 7 visit another category to provide holdout diversity.
             if step < 6:
