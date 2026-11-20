@@ -73,3 +73,20 @@ def test_synthetic_seed_and_temporal_evaluation(tmp_path):
 def test_evaluation_rejects_insufficient_data():
     with pytest.raises(ValueError, match="At least five"):
         evaluate_temporal([], [])
+
+
+def test_temporal_evaluation_freezes_catalog_at_cutoff():
+    videos = [
+        Video("seen", "Training item", "ai", 0),
+        Video("target", "Available holdout item", "ai", 4),
+        Video("future", "Future release", "ai", 4.5),
+    ]
+    events = [Event("alice", "seen", "click", timestamp) for timestamp in range(1, 5)]
+    events.extend([Event("alice", "target", "click", 5), Event("bob", "future", "click", 6)])
+
+    result = evaluate_temporal(videos, events, k=1)
+
+    assert result["cutoff_timestamp"] == 4
+    assert result["evaluated_users"] == 1
+    assert result["recall_at_k"] == 1
+    assert result["catalog_coverage_at_k"] == 0.5
