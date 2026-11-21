@@ -6,7 +6,14 @@ import argparse
 import json
 import time
 
-from feedback_loop_engine.engine import Recommendation, Store, Video, evaluate_temporal, rank
+from feedback_loop_engine.engine import (
+    Recommendation,
+    Store,
+    Video,
+    default_db_path,
+    evaluate_temporal,
+    rank,
+)
 
 CATEGORIES = ("ai", "cars", "music", "science", "games", "sports")
 
@@ -38,7 +45,7 @@ def seed(store: Store) -> int:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Feedback Loop Engine demo")
-    parser.add_argument("--db", default="feedback_loop.sqlite3")
+    parser.add_argument("--db", default=default_db_path())
     parser.add_argument("command", choices=["seed", "evaluate", "recommend"])
     parser.add_argument("--user", default="user-0")
     parser.add_argument("--k", type=int, default=5)

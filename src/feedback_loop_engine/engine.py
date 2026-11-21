@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import os
 import sqlite3
 import time
 import uuid
@@ -10,6 +11,10 @@ from collections import Counter, defaultdict
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from pathlib import Path
+
+
+def default_db_path() -> str:
+    return os.environ.get("FEEDBACK_LOOP_DB", "feedback_loop.sqlite3")
 
 
 @dataclass(frozen=True)

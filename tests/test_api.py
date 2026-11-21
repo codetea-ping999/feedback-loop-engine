@@ -1,7 +1,9 @@
+import sys
+
 from fastapi.testclient import TestClient
 
 from feedback_loop_engine.api import create_app
-from feedback_loop_engine.demo import seed
+from feedback_loop_engine.demo import main, seed
 
 
 def test_api_round_trip(tmp_path):
@@ -32,3 +34,19 @@ def test_input_validation(tmp_path):
     assert client.post(
         "/feedback", json={"user_id": "ok", "request_id": "bad", "video_id": "v", "action": "other"}
     ).status_code == 422
+
+
+def test_demo_and_api_share_configured_database(tmp_path, monkeypatch):
+    database = tmp_path / "shared.sqlite3"
+    override = tmp_path / "override.sqlite3"
+    monkeypatch.setenv("FEEDBACK_LOOP_DB", str(database))
+    monkeypatch.setattr(sys, "argv", ["demo", "seed"])
+
+    main()
+
+    assert len(create_app().state.store.videos()) == 36
+
+    monkeypatch.setattr(sys, "argv", ["demo", "seed", "--db", str(override)])
+    main()
+
+    assert len(create_app(override).state.store.videos()) == 36

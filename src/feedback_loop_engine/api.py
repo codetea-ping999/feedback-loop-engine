@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Literal
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-from feedback_loop_engine.engine import Store, rank
+from feedback_loop_engine.engine import Store, default_db_path, rank
 
 
 class RecommendInput(BaseModel):
@@ -31,7 +30,7 @@ class FeedbackInput(BaseModel):
 
 
 def create_app(db_path: str | Path | None = None) -> FastAPI:
-    store = Store(db_path or os.environ.get("FEEDBACK_LOOP_DB", "feedback_loop.sqlite3"))
+    store = Store(db_path or default_db_path())
     app = FastAPI(title="Feedback Loop Engine — Phase 1", version="0.1.0")
     app.state.store = store
 
