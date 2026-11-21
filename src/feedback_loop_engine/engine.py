@@ -253,6 +253,8 @@ def evaluate_temporal(videos: list[Video], events: list[Event], k: int = 5) -> d
     if len(positives) < 5:
         raise ValueError("At least five positive events are required for evaluation")
     cutoff = positives[max(0, int(len(positives) * 0.8) - 1)].occurred_at
+    catalog = [video for video in videos if video.published_at <= cutoff]
+    catalog_ids = {video.id for video in catalog}
     train = [event for event in events if event.occurred_at <= cutoff]
     test = [event for event in positives if event.occurred_at > cutoff]
     seen = defaultdict(set)
@@ -261,7 +263,7 @@ def evaluate_temporal(videos: list[Video], events: list[Event], k: int = 5) -> d
             seen[event.user_id].add(event.video_id)
     relevant: dict[str, set[str]] = defaultdict(set)
     for event in test:
-        if event.video_id not in seen[event.user_id]:
+        if event.video_id in catalog_ids and event.video_id not in seen[event.user_id]:
             relevant[event.user_id].add(event.video_id)
     recalls: list[float] = []
     ndcgs: list[float] = []
@@ -269,7 +271,7 @@ def evaluate_temporal(videos: list[Video], events: list[Event], k: int = 5) -> d
     for user_id, truth in sorted(relevant.items()):
         if not truth:
             continue
-        predicted = rank(videos, train, user_id, k=k, now=cutoff)
+        predicted = rank(catalog, train, user_id, k=k, now=cutoff)
         ids = [item.video_id for item in predicted]
         recommended.update(ids)
         recalls.append(len(set(ids) & truth) / len(truth))
@@ -285,6 +287,6 @@ def evaluate_temporal(videos: list[Video], events: list[Event], k: int = 5) -> d
         "evaluated_users": len(recalls),
         "recall_at_k": round(sum(recalls) / len(recalls), 6),
         "ndcg_at_k": round(sum(ndcgs) / len(ndcgs), 6),
-        "catalog_coverage_at_k": round(len(recommended) / len(videos), 6) if videos else 0,
+        "catalog_coverage_at_k": round(len(recommended) / len(catalog), 6),
         "k": k,
     }
